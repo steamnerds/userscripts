@@ -11,7 +11,7 @@ var webapikey = prompt("Please enter your Steam WebAPIkey - https://steamcommuni
 var sleep = prompt("Time to sleep between api calls (in ms)", "1000");
 
 document.location.href = document.location.href.split('#')[0] + "#" + appid;
-g_ActiveInventory.GoToPage(g_ActiveInventory.m_cPages);
+//g_ActiveInventory.GoToPage(g_ActiveInventory.m_cPages);
 
 invAssets = g_rgAppContextData[appid].rgContexts[context].inventory.m_rgAssets;
 
