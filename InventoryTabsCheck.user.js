@@ -13,6 +13,10 @@
 /*jshint esversion: 6 */
 
 function getInventory() {
+  if (!g_steamID) {
+    console.error("Inventory Tabs Check: Not logged into Steam");
+    return;
+  }
   var t1 = Date.now();
   jQuery.ajax({
     type: 'GET',
@@ -162,10 +166,6 @@ function getInventory() {
 }
 
 (() => {
-  if (!g_steamID) {
-    console.error("Inventory Tabs Check: Not logged into Steam");
-    return;
-  }
   var script = document.createElement('script');
   script.innerHTML = "(" + getInventory.toString() + ")()";
   document.body.appendChild(script);
