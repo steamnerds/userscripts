@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      1.0
+// @version      1.1
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -36,9 +36,12 @@ function getInventory() {
   function handleResponse(rr, t1) {
     try {
       if (rr.includes("g_strInventoryLoadURL") && rr.includes('id="inventory_link_753"')) {
+        var useLevenshteinDistance = true; // mapping in case of spelling mistakes
         var cache = JSON.parse(rr.slice(rr.indexOf('g_rgAppContextData') + 21, rr.indexOf('g_strInventoryLoadURL') - 9));
         var total = 0;
         var owned = 0;
+        var av = 0;
+        var nav = 0;
         var cu = '#3a3a3a';
         var co = '#1d1d1d';
         var ca = '#66C0F4';
@@ -84,10 +87,9 @@ function getInventory() {
               a = $J('.bb_table_td')[i].children[0].innerText;
               var found = false;
               for (var app in cache) {
-                var distance = levenshtein(cache[app].name.toLowerCase(), a.toLowerCase()); // mapping in case of spelling mistakes
+                var distance = useLevenshteinDistance ? levenshtein(cache[app].name.toLowerCase(), a.toLowerCase()) : Math.min();
                 if ((cache[app].name.toLowerCase() == a.toLowerCase()) || (distance <= 2 && cache[app].name.length > 6)) {
                   found = true;
-                  owned++;
                 }
               }
               if (!found) {
@@ -95,13 +97,16 @@ function getInventory() {
                   $J('.bb_table_td')[i].parentNode.style.backgroundColor = ca;
                   $J('.bb_table_td')[i].childNodes[0].style.color = co;
                   $J('.bb_table_td')[i].parentNode.style.color = co;
+                  av++;
                 } else {
                   $J('.bb_table_td')[i].parentNode.style.backgroundColor = cu;
+                  nav++;
                 }
               } else {
                 $J('.bb_table_td')[i].parentNode.style.backgroundColor = co;
                 $J('.bb_table_td')[i].childNodes[0].style.color = cu;
                 $J('.bb_table_td')[i].parentNode.style.color = cu;
+                owned++;
               }
             }
           }
@@ -119,12 +124,18 @@ function getInventory() {
               "class": "subSectionDesc",
               "html": "Total number of inventories listed: " + total + "<br>" +
                 "Number of owned inventories listed: " + owned + "<br>" +
-                "Number of missing or unmatched inventories listed" +
+                "True number of owned invetories: " + Object.keys(cache).length + "<br>" +
+                "Number of unmatched inventories listed" +
                 '<span class="commentthread_subscribe_hint" data-tooltip-text="' +
-                'Misspelled or changed names can cause misses. The script tries to auto-correct which can cause false-positives.">' +
+                'Number of owned inventories which could not be found despite tolerances.">' +
                 '(<span class="commentthread_subscribe_hint_q">?</span>)</span>' +
-                ": " + (total - owned) + "<br>" +
-                "True number of owned invetories: " + Object.keys(cache).length + "<br><br>" +
+                ": " + (Object.keys(cache).length - owned) + "<br>" +
+                "Estimated number of missing inventories" +
+                '<span class="commentthread_subscribe_hint" data-tooltip-text="' +
+                'Misspelled or changed names can cause false-positives. The script tries to auto-correct which can cause false-negatives.">' +
+                '(<span class="commentthread_subscribe_hint_q">?</span>)</span>' +
+                ": " + Math.floor((2 * total - Object.keys(cache).length - owned) / 2) + " ±" + Math.ceil((Object.keys(cache).length - owned) / 2) +
+                " (" + av + " available, " + nav + " unavailable)" + "<br><br>" +
                 "Time to load your inventory: " + (t2 - t1) + "ms<br>" +
                 "Time to display the results: " + (Date.now() - t2) + "ms<br><br>"
             }).append(
