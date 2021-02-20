@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      1.1
+// @version      1.2
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -97,15 +97,19 @@ function getInventory() {
                   $J('.bb_table_td')[i].parentNode.style.backgroundColor = ca;
                   $J('.bb_table_td')[i].childNodes[0].style.color = co;
                   $J('.bb_table_td')[i].parentNode.style.color = co;
+                  $J('.bb_table_td')[i].parentNode.classList.add('ca');
                   av++;
                 } else {
                   $J('.bb_table_td')[i].parentNode.style.backgroundColor = cu;
+                  $J('.bb_table_td')[i].parentNode.classList.add('cu');
                   nav++;
                 }
               } else {
                 $J('.bb_table_td')[i].parentNode.style.backgroundColor = co;
                 $J('.bb_table_td')[i].childNodes[0].style.color = cu;
                 $J('.bb_table_td')[i].parentNode.style.color = cu;
+                $J('.bb_table_td')[i].parentNode.style.display = "none";
+                $J('.bb_table_td')[i].parentNode.classList.add('co');
                 owned++;
               }
             }
@@ -132,9 +136,11 @@ function getInventory() {
                 ": " + (Object.keys(cache).length - owned) + "<br>" +
                 "Estimated number of missing inventories" +
                 '<span class="commentthread_subscribe_hint" data-tooltip-text="' +
-                'Misspelled or changed names can cause false-positives. The script tries to auto-correct which can cause false-negatives.">' +
+                'Misspelled or changed names can cause false-positives. ' +
+                'The script tries to auto-correct which can cause false-negatives.">' +
                 '(<span class="commentthread_subscribe_hint_q">?</span>)</span>' +
-                ": " + Math.floor((2 * total - Object.keys(cache).length - owned) / 2) + " ±" + Math.ceil((Object.keys(cache).length - owned) / 2) +
+                ": " + Math.floor((2 * total - Object.keys(cache).length - owned) / 2) +
+                " ±" + Math.ceil((Object.keys(cache).length - owned) / 2) +
                 " (" + av + " available, " + nav + " unavailable)" + "<br><br>" +
                 "Time to load your inventory: " + (t2 - t1) + "ms<br>" +
                 "Time to display the results: " + (Date.now() - t2) + "ms<br><br>"
@@ -147,18 +153,24 @@ function getInventory() {
                 }).append(
                   $J("<div>", {
                     "class": "bb_table_td",
-                    "style": "background: " + co,
-                    "text": 'Already owned'
+                    "style": "background: " + co + ";opacity: 0.2;cursor:pointer",
+                    "id": "co",
+                    "onClick": 'toggleInventories("co");',
+                    "text": 'Already owned (' + owned + ')'
                   })).append(
                   $J("<div>", {
                     "class": "bb_table_td",
-                    "style": "background: " + cu,
-                    "text": 'Missing, but unavailable'
+                    "style": "background: " + cu + ";cursor:pointer",
+                    "id": "cu",
+                    "onClick": 'toggleInventories("cu");',
+                    "text": 'Missing, but unavailable (' + nav + ')'
                   })).append(
                   $J("<div>", {
                     "class": "bb_table_td",
-                    "style": "background:" + ca + "; color:" + co,
-                    "text": 'Missing and available'
+                    "style": "background:" + ca + ";color:" + co + ";cursor:pointer",
+                    "id": "ca",
+                    "onClick": 'toggleInventories("ca");',
+                    "text": 'Missing and available (' + av + ')'
                   }))
               )))).append(
           $J("<div>", {
@@ -176,8 +188,21 @@ function getInventory() {
   }
 }
 
+function toggleInventories(i) {
+  if ($J('#' + i).css('opacity') == "1") {
+    $J('#' + i).css('opacity', '0.2');
+    $J('.' + i).css('display', 'none');
+  } else {
+    $J('#' + i).css('opacity', '1');
+    $J('.' + i).css('display', '');
+  }
+
+}
+
 (() => {
   var script = document.createElement('script');
-  script.innerHTML = "(" + getInventory.toString() + ")()";
+  script.innerHTML = "" +
+    toggleInventories.toString() +
+    "(" + getInventory.toString() + ")()";
   document.body.appendChild(script);
 })();
