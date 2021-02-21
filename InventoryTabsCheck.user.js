@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      1.3
+// @version      1.3.1
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -218,6 +218,6 @@ function toggleInventories(i) {
   var script = document.createElement('script');
   script.innerHTML = "" +
     toggleInventories.toString() +
-    "(" + getInventory.toString() + ")()";
+    getInventory.toString() + "(() => getInventory())()";
   document.body.appendChild(script);
 })();
