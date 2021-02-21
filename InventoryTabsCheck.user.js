@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      1.2
+// @version      1.3
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -16,6 +16,10 @@ function getInventory() {
   if (!g_steamID) {
     console.error("Inventory Tabs Check: Not logged into Steam");
     return;
+  }
+  if ($J('#tabcheck').length > 0) {
+    $J('#tabCheckRefresh').attr('src', 'https://community.akamai.steamstatic.com/public/images/login/throbber.gif');
+    $J('#tabCheckRefresh').attr('onClick', '');
   }
   var t1 = Date.now();
   jQuery.ajax({
@@ -115,14 +119,25 @@ function getInventory() {
             }
           }
         }
+        if ($J('#tabcheck').length > 0) {
+          $J('#tabcheck').remove();
+        }
         $J('#2956077').append(
           $J("<div>", {
-            "class": "subSection detailBox"
+            "class": "subSection detailBox",
+            "id": "tabcheck"
           }).append(
             $J("<div>", {
               "class": "subSectionTitle",
               "text": 'Inventory Tab Check'
-            })).append(
+            }).append(
+              $J("<img>", {
+                "src": "https://steamcommunity-a.akamaihd.net/public/shared/images/header/inbox_tradeoffers.png",
+                "style": "padding-left: 10px;vertical-align:middle;height:16px;width:16px",
+                "onClick": 'getInventory();',
+                "title": 'Refresh',
+                "id": 'tabCheckRefresh'
+              }))).append(
             $J("<br>")).append(
             $J("<div>", {
               "class": "subSectionDesc",
@@ -163,7 +178,7 @@ function getInventory() {
                     "style": "background: " + cu + ";cursor:pointer",
                     "id": "cu",
                     "onClick": 'toggleInventories("cu");',
-                    "text": 'Missing, but unavailable (' + nav + ')'
+                    "text": 'Missing but unavailable (' + nav + ')'
                   })).append(
                   $J("<div>", {
                     "class": "bb_table_td",
