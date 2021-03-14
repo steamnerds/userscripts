@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      2.0
+// @version      2.1
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -12,7 +12,7 @@
 // https://github.com/steamnerds/userscripts
 /*jshint esversion: 6 */
 
-function getInventory() {
+function main() {
   if (!g_steamID) {
     console.error("Inventory Tabs Check: Not logged into Steam");
     return;
@@ -26,26 +26,52 @@ function getInventory() {
     $J('#tabCheckRefresh').attr('src', 'https://community.akamai.steamstatic.com/public/images/login/throbber.gif');
     $J('#tabCheckRefresh').attr('onClick', '');
   }
+
   var t1 = Date.now();
+
   jQuery.ajax({
     type: 'GET',
-    url: "https://steamcommunity.com/my/inventory/",
-    success: function(r) {
+    url: "https://steamcommunity.com/groups/InventoryItemCollectors/discussions",
+    success: (r) => {
       if (r != "") {
-        handleResponse(r, t1);
+        var r1 = {};
+        // create a value key pair of name and discussion userList
+        r.replace(/<a href=\"https:\/\/steamcommunity\.com\/groups\/InventoryItemCollectors\/discussions\/\d+\/\">((?!<\/a>).|\n|\t|\r)*<\/a>/gm, (a) => {
+          r1[a.substring(a.indexOf('/">') + 3, a.indexOf('</a>')).replace(/[\t\n\r]/g, '').toLowerCase()] = a.substring(a.indexOf('https://steamcommunity.com/groups/InventoryItemCollectors/discussions/') + 70, a.indexOf('/">'));
+        });
+        getInventory(r1, t1);
       } else {
-        console.log("There was an error while trying to load your Steam inventory");
+        console.log("There was an error while trying to load the Steam Inventory group");
+        getInventory({}, t1);
       }
     },
-    error: function() {
-      console.log("There was an error while trying to load your Steam inventory");
+    error: () => {
+      console.log("There was an error while trying to load the Steam Inventory group");
+      getInventory({}, t1);
     }
   });
 
-  function handleResponse(rr, t1) {
+  function getInventory(r1, t1) {
+    jQuery.ajax({
+      type: 'GET',
+      url: "https://steamcommunity.com/my/inventory/",
+      success: (r) => {
+        if (r != "") {
+          handleResponse(r1, r, t1);
+        } else {
+          console.log("There was an error while trying to load your Steam inventory");
+        }
+      },
+      error: () => {
+        console.log("There was an error while trying to load your Steam inventory");
+      }
+    });
+  }
+
+  function handleResponse(r1, r2, t1) {
     try {
-      if (rr.includes("g_strInventoryLoadURL") && rr.includes('id="inventory_link_753"')) {
-        var cache = JSON.parse(rr.slice(rr.indexOf('g_rgAppContextData') + 21, rr.indexOf('g_strInventoryLoadURL') - 9));
+      if (r2.includes("g_strInventoryLoadURL") && r2.includes('id="inventory_link_753"')) {
+        var cache = JSON.parse(r2.slice(r2.indexOf('g_rgAppContextData') + 21, r2.indexOf('g_strInventoryLoadURL') - 9));
         var [owned, av, ab, hid, nTotal, nVisible, nBroken] = [0, 0, 0, 0, 0, 0];
         var [unknownApps, misspelledApps] = [
           [],
@@ -72,6 +98,11 @@ function getInventory() {
               var obtainable = [tmp.includes('Buy'), tmp.includes('Drops'), tmp.includes('Trade'), tmp.includes('Broken')];
               var found = cache.hasOwnProperty(appid);
               if (!$J('.bb_table_tr')[i].children[4]) { //prevent duplication on refresh
+                //add discussion Links
+                if (r1.hasOwnProperty($J('.bb_table_tr')[i].children[1].innerText.toLowerCase())) {
+                  $J('.bb_table_tr')[i].children[1].innerHTML = '<a href="https://steamcommunity.com/groups/InventoryItemCollectors/discussions/' + r1[$J('.bb_table_tr')[i].children[1].innerText.toLowerCase()] + '/">' + $J('.bb_table_tr')[i].children[1].innerHTML + '</a>';
+                }
+
                 //add new link column
                 $J("<div>", {
                   "class": "bb_table_td",
@@ -86,7 +117,7 @@ function getInventory() {
                       "href": "https://steamcommunity.com/my/inventory/#" + appid
                     }).append(
                       $J("<img>", {
-                        "src": 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAC5ElEQVQ4y5WT30uUWRjHP+ecec13ppp0p0lmmmks6mIpNikiKFOECMp+EF4EXuw/sgS5FxHshlMN6+IQIcyFGZREEF70gywt/Ik6zozZNGq261qN77iO5jTuzfsugxrUFw4cznn48Jzv9zkCU8FQOCClbJBSnhFCOAHy+Xwmm13oGOjvvRxpuRkFFoEV1pECaLzRXKFpWreU8pAQoti6FEJsKCoq+tHr9dXruh4bjQ6/Az6vB1PBUDigaVq3EMKZyRhTba2R9qZQY/uD+/c6DMNI+v0Bj263l/p3lNfOpdN9k5Op98DSGtCp0+euSSkPZTLG1OVfL7aOJWLDQC/QP5FKvkzERzv3Vxyo1HX9B2dJSeD5syedwByQKwRJKeUZgPa7dx6n05+SQBfQA0SB6ORE6unI0GADgMez/SdgD7B5dUfSMvZF59MkEAPGAQP4Yi6j5Vb4NoCmacVAGbBxDahgvwTMAPOrzFwxzyzpgLYGlM/nMwCVVTXlfEXBUPgYwPLy8uLXamQ2u9ABcPLU2Vqff0e52bawCn5v/GOLUjIIMJFKxoEssLwmNfe2snGv11ev2+2l+ysOVHo83tnBgb7XQC4YCldrRdptKdW+XC6XbWuNPDxWVaNHR4ZerLZAAPr5ugunq2uO37LZbPp6bedyuWzznzciZ8/VHfZ4t++Nx6KXglevNAGz1hgo4MtodPjdXDrd5ywpCTgcG11KKZvlydvk+Ehba+ShBQFwubZWe70+0dvzatD8NnlRkN5mIGDOSZmZDkD2yNEq+4X6n39RSjkKO+3v67na3HT9N+AfVRDxkjmxfwEpYAyIA7HJiVS/w+Ho8fkDtVLK/6N3ubZWDA8NdBnG3N9qtR3Av8An8/2z5n4+OjI0LYR8vXPX7hMWTCllG0vEU9PTUwnFt2kF+DyWiKUKYR8+zH6MtNx8BCQF3ycJOAPluw663e6qVy+75oE3QPf3gizYJsBtBpIGZv4DopoXCNtbY3cAAAAASUVORK5CYII=',
+                        "src": 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA0UlEQVQ4y9XTMUpDQRSF4W9enoVoq0VEsErjBqysBMkiBIsswMXYCkI6+wQiNga3oIWVTSBlQAsJJNdmAkPgKcQqpxnOz8y5d+YybL3SOoiIFvo4xSLjCm+4Siktyv11RLTRLcJaOMMtZpnt4wa9iFgFBEYi4i42V7/CYdHRCONfrjzGU+EPajximsED9vDeEDDANz6yf63w8o8hPNc4QS+DY+zivOFAB3NcZD+s82uudPlHxfXgqPCF5QbtL/GZImIH1zgq5puKtYlNcL/9f8kPHadvc+IogacAAAAASUVORK5CYII=',
                         "title": "Visit your inventory"
                       })))
                 ).append(
@@ -107,7 +138,7 @@ function getInventory() {
                       "href": "https://steamcommunity.com/app/" + appid
                     }).append(
                       $J("<img>", {
-                        "src": 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA1klEQVQ4y6WSsRHCMBAEF4YCXIKUK4BUEe7E7gAqYKgA04E7gA5wpNQEyqUSXAKJzDzGDGBfpp//lf50CwDnQwEovitao2tZWDgfTsCO31VZo/f9YfnnMMP+JRPkfNg6H9RkQFLrfFBzABlQzAEwZ4W7BFz/HG6AbX9YASUQU3E90jy8+QxcnkGSXwPcRHOZADKhCjiI2nH14Zlluq1Nbo+pA+oxE+vkyyFB4shgBWys0VGukAHKGn0fpC5Lq/X+NNbo/M2DL9GVkBfATzmwRndALv+/1wMRdDvjcj8B+wAAAABJRU5ErkJggg==',
+                        "src": 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABnUlEQVQ4y7VTPYsUQRB9/bG9A7omCvcbBF3BWPwBhwf+BDk/Ev+DibFgciaKkWgmiHKhgRgrmNwhxgo3HgfbvcNUTVeXycwxrLuIwTV0UK/rFfV4r4GzODHGK2uwq/8kNk3zlJmFmZWIDgaciA6YWZk5L5fLJ2OOHRfOud0BU9WjAVfVemjx3t8dc/y4MMacAwAReVtK+UFERwCQc36pqsfOudvGmPMbJbRt+5mZebFY3Gfmrl9bmbnrsdy27aeNEqqquiEi+9baSyvbeWvtRRHZr6rq5toBKaUHRFQ753ZKKTWAbtTHIvLbOXeLiOqU0r1T2b1F8+l0+gWA6zU/V9Xae/8QgOac94wxW977gShEdH02m32zABBCeKOqEUAnIu9E5LtzbtsYMzPGXHDObYvIoYi8B9CpagohvD7dgJk15/zCWns55/whhPB41SEATESPJpPJTinl0Hu/G0KwQ4CejULzi5nLyIHhFiL6OQrd3l82ppTuMLM2TfNqdcCAxRivbbRRVb+WUj4COFkTk+P+Tf/nU81jjHOc5fkDm1grbX5l5DcAAAAASUVORK5CYII=',
                         "title": "Visit community hub"
                       })))
                 ).append(
@@ -222,7 +253,7 @@ function getInventory() {
                 ((Object.keys(cache).length == owned) && (unknownApps.length > 0) ? '' : "Inventories the guide is missing: " + unknownApps.toString() + '<br>') +
                 (misspelledApps.length > 0 ? '' : "Misspelled apps: " + misspelledApps.toString() + '<br>') +
                 "<br>" +
-                "Time to load your inventory: " + (t2 - t1) + "ms<br>" +
+                "Time to load resources: " + (t2 - t1) + "ms<br>" +
                 "Time to display the results: " + (Date.now() - t2) + "ms<br><br>"
             })).append(
               $J("<div>", {
@@ -283,6 +314,6 @@ function toggleInventories(i) {
   var script = document.createElement('script');
   script.innerHTML = "" +
     toggleInventories.toString() +
-    getInventory.toString() + "(() => getInventory())()";
+    main.toString() + "(() => main())()";
   document.body.appendChild(script);
 })();
