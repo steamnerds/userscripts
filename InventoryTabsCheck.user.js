@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      2.1
+// @version      2.1.1
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -100,7 +100,7 @@ function main() {
               if (!$J('.bb_table_tr')[i].children[4]) { //prevent duplication on refresh
                 //add discussion Links
                 if (r1.hasOwnProperty($J('.bb_table_tr')[i].children[1].innerText.toLowerCase())) {
-                  $J('.bb_table_tr')[i].children[1].innerHTML = '<a href="https://steamcommunity.com/groups/InventoryItemCollectors/discussions/' + r1[$J('.bb_table_tr')[i].children[1].innerText.toLowerCase()] + '/">' + $J('.bb_table_tr')[i].children[1].innerHTML + '</a>';
+                  $J('.bb_table_tr')[i].children[1].innerHTML = '<a id="invGroupUrl' + appid + '" class="invGroupUrl" href="https://steamcommunity.com/groups/InventoryItemCollectors/discussions/' + r1[$J('.bb_table_tr')[i].children[1].innerText.toLowerCase()] + '/">' + $J('.bb_table_tr')[i].children[1].innerHTML + '</a>';
                 }
 
                 //add new link column
@@ -223,7 +223,7 @@ function main() {
               $J("<img>", {
                 "src": "https://steamcommunity-a.akamaihd.net/public/shared/images/header/inbox_tradeoffers.png",
                 "style": "padding-left: 10px;vertical-align:middle;height:16px;width:16px",
-                "onClick": 'getInventory();',
+                "onClick": 'main();',
                 "title": 'Refresh',
                 "id": 'tabCheckRefresh'
               }))).append(
