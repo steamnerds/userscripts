@@ -5,56 +5,88 @@
 // If many stacked items, might have to run it a few times before all are unstacked (not sure why, maybe rate limits, since I have no pauses at all)
 // EDIT: Added a pause between API calls :P
 
-var appid = prompt("Please enter the appid", "753");
-var context = prompt("Please enter the context number (Most likely 2)", "2");
-var webapikey = prompt("Please enter your Steam WebAPIkey - https://steamcommunity.com/dev/apikey", "https://steamcommunity.com/dev/apikey");
-var sleep = prompt("Time to sleep between api calls (in ms)", "1000");
+/*jshint esversion: 8 */
 
-document.location.href = document.location.href.split('#')[0] + "#" + appid;
-//g_ActiveInventory.GoToPage(g_ActiveInventory.m_cPages);
+(() => {
+  if (!/^https:\/\/steamcommunity\.com\/(id\/[\w-_]{1,64}|profiles\/\d{17})\/inventory/.test(location.href)) {
+    console.error("You need to run this script on your inventory page");
+    return false;
+  }
 
-invAssets = g_rgAppContextData[appid].rgContexts[context].inventory.m_rgAssets;
-
-async function splitItems() {
-    for (var key in invAssets) {
-	    itemid = invAssets[key].assetid;
-	    quantity = invAssets[key].amount;
-
-	    if (quantity > 1) {
-		    console.log("itemid: " + itemid + " -- quantity: " + quantity);
-
-		    for (i = 1; i < quantity; i++) {
-			    //console.log("test");
-			
-			    var url = "https://api.steampowered.com/IInventoryService/SplitItemStack/v1/?key=" + webapikey + "&appid=" + appid + "&itemid=" + itemid + "&quantity=1";
-			    //var data = {
-			    //	appid: appid,
-			    //	itemid: itemid,
-			    //	quantity: "1"
-			    //};
-			    var othePram = {
-				    headers: {
-					    "content-type":"application/json; charset=UTF-8"
-				    },
-				    //body: data,
-				    method: "POST",
-				    mode: "no-cors"
-			    };
-
-			    //console.log("url: " + url);
-
-			    fetch(url, othePram)
-			    .then(data=>{return data.json})
-			    .then(res=>{console.log(res)})
-			    .catch(error=>console.log(error))
-			
-			    await new Promise(r => setTimeout(r, sleep));
-		    }
-	    }
+  var [appid, context, webapikey, sleep, invAssets] = [location.hash.substr(1).replace(/\D/g, ''), '', '', '', ''];
+  appid = appid != '' ? appid : '753';
+  ShowPromptDialog("Please enter the appid", "", "Continue", "Abort", '', appid).done((a) => {
+    appid = a;
+    let text = 'Here are the available context number for this app (usually only the number 2):<br><br>';
+    for (var contextnr in g_rgAppContextData[appid].rgContexts) {
+      if (g_rgAppContextData[appid].rgContexts.hasOwnProperty(contextnr)) {
+        text += contextnr + ': ' + g_rgAppContextData[appid].rgContexts[contextnr].name + ' (' + g_rgAppContextData[appid].rgContexts[contextnr].asset_count + ')<br>';
+      }
     }
-}
+    text += '<br>';
+    ShowPromptDialog("Please enter the correct context number", text, "Continue", "Abort", '', '2').done((b) => {
+      context = b;
+      ShowPromptDialog("Please enter your Steam WebAPIkey", 'Enter the key listed here: <a href="https://steamcommunity.com/dev/apikey">https://steamcommunity.com/dev/apikey</a> <br><br>', "Continue", "Abort", '', '').done((c) => {
+        webapikey = c;
+        ShowPromptDialog("Time to sleep between api calls (in ms)", "", "Run", "Abort", '', '1000').done((d) => {
+          sleep = d;
+          invAssets = g_rgAppContextData[appid].rgContexts[context].inventory.m_rgAssets;
+          splitItems();
+        });
+      });
+    });
+  });
 
-splitItems();
+  document.location.href = document.location.href.split('#')[0] + "#" + appid;
+  //g_ActiveInventory.GoToPage(g_ActiveInventory.m_cPages);
+
+
+  async function splitItems() {
+    ShowAlertDialog("Splitting items", '<div id="itemstacking"></div>');
+
+    for (var key in invAssets) {
+      itemid = invAssets[key].assetid;
+      quantity = invAssets[key].amount;
+
+      if (quantity > 1) {
+        console.log("itemid: " + itemid + " -- quantity: " + (quantity - 1));
+
+        for (i = 1; i < quantity; i++) {
+          //console.log("test");
+          $J('#itemstacking').text('Splitting items: ' + i + '/' + quantity);
+          var url = "https://api.steampowered.com/IInventoryService/SplitItemStack/v1/?key=" + webapikey + "&appid=" + appid + "&itemid=" + itemid + "&quantity=1";
+          //var data = {
+          //	appid: appid,
+          //	itemid: itemid,
+          //	quantity: "1"
+          //};
+          var othePram = {
+            headers: {
+              "content-type": "application/json; charset=UTF-8"
+            },
+            //body: data,
+            method: "POST",
+            mode: "no-cors"
+          };
+
+          //console.log("url: " + url);
+
+          fetch(url, othePram)
+            .then(data => {
+              console.log(data);
+              return data.json;
+            })
+            .catch(error => console.log(error));
+
+          await new Promise(r => setTimeout(r, sleep));
+        }
+      } else {
+        $J('#itemstacking').text('No items left to split');
+      }
+    }
+  }
+})();
+
 
 // Legal Disclaimer
 // THESE SCRIPTS AND EXAMPLE FILES ARE PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
