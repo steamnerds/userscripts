@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      2.2.1
+// @version      2.2.2
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -15,7 +15,7 @@
 
 function runInventoryTabCheck() {
   if (!g_steamID) {
-    log(Style.warn, "Inventory Tabs Check: Not logged into Steam");
+    log('warning', "Inventory Tabs Check: Not logged into Steam");
     return;
   }
   if ($J('#tabcheck').length > 0) {
@@ -37,12 +37,12 @@ function runInventoryTabCheck() {
         });
         getInventory(r1, t1);
       } else {
-        log(Style.warn, "There was an error while trying to load the Steam Inventory group");
+        log('warning', "There was an error while trying to load the Steam Inventory group");
         getInventory({}, t1);
       }
     },
     error: () => {
-      log(Style.warn, "There was an error while trying to load the Steam Inventory group");
+      log('warning', "There was an error while trying to load the Steam Inventory group");
       getInventory({}, t1);
     }
   });
@@ -55,11 +55,11 @@ function runInventoryTabCheck() {
         if (r != "") {
           handleResponse(r1, r, t1);
         } else {
-          log(Style.warn, "There was an error while trying to load your Steam inventory");
+          log('warning', "There was an error while trying to load your Steam inventory");
         }
       },
       error: () => {
-        log(Style.warn, "There was an error while trying to load your Steam inventory");
+        log('warning', "There was an error while trying to load your Steam inventory");
       }
     });
   }
@@ -288,7 +288,7 @@ function runInventoryTabCheck() {
         ShowAlertDialog("Error", "An error occurred while trying to retrieve your inventory");
       }
     } catch (e) {
-      log(Style.warn, e);
+      log('warning', e);
       ShowAlertDialog("Error", "An error occurred while trying to retrieve an inventory");
       return false;
     }
@@ -323,28 +323,6 @@ function displayInventoryFeatures() {
 
 
 function initialize() {
-  var Style = { //from simplernerd
-    base: [
-      "color: #8f98a0",
-      "background-color: #1b2838)",
-      "padding: 2px 4px",
-      "border-radius: 2px"
-    ],
-    warn: [
-      "color: #a94847"
-      //"background-color: rgba(34, 35, 48, 0.93)"
-    ],
-    good: [
-      "color: #66C0F4",
-      "background-color: #1b2838"
-    ]
-  };
-  let log = (extra, text) => {
-    let style = Style.base.join(';') + ';';
-    style += extra.join(';');
-    console.log(`%c${text}`, style);
-  };
-
   var url = window.location.href;
   switch (true) {
     case /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/.test(url): // guide
@@ -354,9 +332,31 @@ function initialize() {
       displayInventoryFeatures();
       break;
     default:
-      log(Style.warn, "Inventory Tabs Check: The script was executed on an invalid page and thus terminated > Only run on " +
+      log('warning', "Inventory Tabs Check: The script was executed on an invalid page and thus terminated > Only run on " +
         "https://steamcommunity.com/sharedfiles/filedetails/?id=873140323 or an inventory page");
   }
+}
+
+function log(extra, text){
+  const Style = { //from simplernerd
+  base: [
+    "color: #8f98a0",
+    "background-color: #1b2838)",
+    "padding: 2px 4px",
+    "border-radius: 2px"
+  ],
+  warning: [
+    "color: #a94847"
+    //"background-color: rgba(34, 35, 48, 0.93)"
+  ],
+  good: [
+    "color: #66C0F4",
+    "background-color: #1b2838"
+  ]
+};
+  let style = Style.base.join(';') + ';';
+  style += Style[extra] ? Style[extra].join(';') : '';
+  console.log(`%c${text}`, style);
 }
 
 (() => {
@@ -365,6 +365,7 @@ function initialize() {
     toggleInventories.toString() +
     initialize.toString() +
     displayInventoryFeatures.toString() +
+    log.toString() +
     runInventoryTabCheck.toString() + "(() => initialize())()";
   document.body.appendChild(script);
 })();
