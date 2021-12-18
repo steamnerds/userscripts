@@ -2,24 +2,20 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      2.1.1
+// @version      2.2
 // @description  Highlights missing inventory tabs in Blueberry's guide
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
+// @include      /^https:\/\/steamcommunity\.com\/(id\/\w{1,64}|profiles\/\d{17})\/inventory/
 // @updateURL    https://raw.githubusercontent.com/steamnerds/userscripts/master/InventoryTabsCheck.user.js
 // @grant        none
 // ==/UserScript==
 // https://github.com/steamnerds/userscripts
 /*jshint esversion: 6 */
 
-function main() {
+function runInventoryTabCheck() {
   if (!g_steamID) {
-    console.error("Inventory Tabs Check: Not logged into Steam");
-    return;
-  }
-  if (!/^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/.test(location.href)) {
-    console.error("Inventory Tabs Check: The script was executed on an invalid page and thus terminated > Only run on " +
-      "https://steamcommunity.com/sharedfiles/filedetails/?id=873140323");
+    log(Style.warn, "Inventory Tabs Check: Not logged into Steam");
     return;
   }
   if ($J('#tabcheck').length > 0) {
@@ -41,12 +37,12 @@ function main() {
         });
         getInventory(r1, t1);
       } else {
-        console.log("There was an error while trying to load the Steam Inventory group");
+        log(Style.warn, "There was an error while trying to load the Steam Inventory group");
         getInventory({}, t1);
       }
     },
     error: () => {
-      console.log("There was an error while trying to load the Steam Inventory group");
+      log(Style.warn, "There was an error while trying to load the Steam Inventory group");
       getInventory({}, t1);
     }
   });
@@ -59,11 +55,11 @@ function main() {
         if (r != "") {
           handleResponse(r1, r, t1);
         } else {
-          console.log("There was an error while trying to load your Steam inventory");
+          log(Style.warn, "There was an error while trying to load your Steam inventory");
         }
       },
       error: () => {
-        console.log("There was an error while trying to load your Steam inventory");
+        log(Style.warn, "There was an error while trying to load your Steam inventory");
       }
     });
   }
@@ -149,7 +145,7 @@ function main() {
                       "href": "https://steamcommunity.com/market/search?appid=" + appid + "#p1_price_asc"
                     }).append(
                       $J("<img>", {
-                        "src": 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABMUlEQVQ4y7WTPW7CQBCFPyMO4COQG5CSAgnLFwh0VGG77QJHyAlI6c50dISKDgXJhUs4AkegnB25SLOLDCHISMlU763mPc3fwn9EWZYvZVkOmuS2r4Qx8OVp8pBBURRxVVV7oAMk/X7/9JCBqk69+Jim6a5pu2cD59yrh8c7s4kBer3eubpotVp9AjEQhnYCDsBpNBoNrwxyoAskwaTtnHsH9rW8YPZcFxdFMa2qauLpHDAAEUCe5xMgr+UbY8wikO12O6htJ8QsTdOPKLAsy3JgAiystSa8bzabjq8wvjGWpBWQtdao6oUYQEQQkaGIzDxGRBYikojIMWq6ruVyWW9jOB6P1z8u8V6ISNfDgzFmffOUf4ssy2Ln3Jtf8UWLrSYGqjpX1Z2qPllrD3/6c78BeHWHF0YVFP4AAAAASUVORK5CYII=',
+                        "src": 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB/klEQVQ4y61TPYsaURQ982aGyQjhTWZ4M8EIo6aRsXJgm+0kRX6AVZIubSSFEslaaSHpREGwSKO1EfwJaxfYMMXWMiASBA1PA34gi7MpsgPGbIKQ3OryDve+c+85F/jHEABA07RHhJAAABhj9nw+HwOAIAgiIQT7/X5/jAVBQJbL5QIAoOs6DTu6rnsW5pqmKYZhKPdhYQ05lWo2m43mcrlnx+8SAJimacfjcQUALMtyXNcFABBCZEEQYNv2TaVSaSSTyXNCyL7X611uNpsd5/xaAoDZbDbmnH+/ownP867CEWRZBmNMXCwW30aj0WdFUQTP865+GUEUxcifqFuW9bBUKn0ol8svi8XiW9/3v1Sr1deSJP3cTavVuphMJrflcvkFpVRxXfecUqpQShXHcWLdbvej4ziPD7F2u10Zj8e3zWbzvRT+FI1Gn6qqClmWoaoqLMuihULhotFoVDjni0NsOp1OCDnYv2maZrVafZXP55+7rnvmOE6k0+k00uk0u09GSqnAGDNxrGm9Xn8zHA69wWDwKZVKRTRNUxhjf/WBBACGYdi2bSvb7TaSTCYzvu9vVVVNJxIJWRRFxGKxmzsnOplMBgCwWq12nPPr35xYq9XeZbPZJ6c6UTqWrd/vX3qe9/VUh0rhYYQd1+v1LszDY9J1/cExFgQBwf+IHy2Yrc9yT7lBAAAAAElFTkSuQmCC',
                         "title": "Visit market page"
                       })))
                 ).append(
@@ -223,7 +219,7 @@ function main() {
               $J("<img>", {
                 "src": "https://steamcommunity-a.akamaihd.net/public/shared/images/header/inbox_tradeoffers.png",
                 "style": "padding-left: 10px;vertical-align:middle;height:16px;width:16px",
-                "onClick": 'main();',
+                "onClick": 'runInventoryTabCheck();',
                 "title": 'Refresh',
                 "id": 'tabCheckRefresh'
               }))).append(
@@ -292,7 +288,7 @@ function main() {
         ShowAlertDialog("Error", "An error occurred while trying to retrieve your inventory");
       }
     } catch (e) {
-      console.log(e);
+      log(Style.warn, e);
       ShowAlertDialog("Error", "An error occurred while trying to retrieve an inventory");
       return false;
     }
@@ -310,10 +306,64 @@ function toggleInventories(i) {
 
 }
 
+function displayInventoryFeatures() {
+  let inventoryLists = document.getElementsByClassName('games_list_separator responsive_hidden'); // display inventory numbers for each section
+  let hideInvTab = () => {
+    $J('#games_list_public').toggle();
+  };
+  for (var j = 0; j < inventoryLists.length; j++) {
+    inventoryLists[j].childNodes[0].textContent = inventoryLists[j].childNodes[0].textContent.replace(/<br>/gi, '') + ':  ' + document.getElementsByClassName('games_list_tabs_ctn responsive_hidden')[j].getElementsByClassName('games_list_tab').length;
+    if (j == 0) { //add functions to the active inventory section
+      inventoryLists[j].onclick = hideInvTab;
+      inventoryLists[j].addClassName('actionable');
+      inventoryLists[j].innerHTML += '<div class="arrow">&nbsp;</div>';
+    }
+  }
+}
+
+
+function initialize() {
+  var Style = { //from simplernerd
+    base: [
+      "color: #8f98a0",
+      "background-color: #1b2838)",
+      "padding: 2px 4px",
+      "border-radius: 2px"
+    ],
+    warn: [
+      "color: #a94847"
+      //"background-color: rgba(34, 35, 48, 0.93)"
+    ],
+    good: [
+      "color: #66C0F4",
+      "background-color: #1b2838"
+    ]
+  };
+  let log = (extra, text) => {
+    let style = Style.base.join(';') + ';';
+    style += extra.join(';');
+    console.log(`%c${text}`, style);
+  };
+
+  var url = window.location.href;
+  switch (true) {
+    case /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/.test(url): // guide
+      runInventoryTabCheck();
+      break;
+    case /^https:\/\/steamcommunity\.com\/(id\/[\w-_]{1,64}|profiles\/\d{17})\/inventory/.test(url): // inventory page
+      displayInventoryFeatures();
+      break;
+    default:
+      log(Style.warn, "Inventory Tabs Check: The script was executed on an invalid page and thus terminated > Only run on " +
+        "https://steamcommunity.com/sharedfiles/filedetails/?id=873140323 or an inventory page");
+  }
+}
+
 (() => {
   var script = document.createElement('script');
   script.innerHTML = "" +
     toggleInventories.toString() +
-    main.toString() + "(() => main())()";
+    initialize.toString() +
+    runInventoryTabCheck.toString() + "(() => initialize())()";
   document.body.appendChild(script);
 })();
