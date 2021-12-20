@@ -2,8 +2,8 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      2.2.2
-// @description  Highlights missing inventory tabs in Blueberry's guide
+// @version      2.3
+// @description  Highlights missing inventory tabs in Blueberry's guide and adds more stats to the inventory page
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
 // @include      /^https:\/\/steamcommunity\.com\/(id\/\w{1,64}|profiles\/\d{17})\/inventory/
@@ -307,18 +307,72 @@ function toggleInventories(i) {
 }
 
 function displayInventoryFeatures() {
-  let inventoryLists = document.getElementsByClassName('games_list_separator responsive_hidden'); // display inventory numbers for each section
+  let inventoryLists = $J('.games_list_separator'); // document.getElementsByClassName('games_list_separator responsive_hidden'); // display inventory numbers for each section
   let hideInvTab = () => {
     $J('#games_list_public').toggle();
   };
-  for (var j = 0; j < inventoryLists.length; j++) {
-    inventoryLists[j].childNodes[0].textContent = inventoryLists[j].childNodes[0].textContent.replace(/<br>/gi, '') + ':  ' + document.getElementsByClassName('games_list_tabs_ctn responsive_hidden')[j].getElementsByClassName('games_list_tab').length;
-    if (j == 0) { //add functions to the active inventory section
-      inventoryLists[j].onclick = hideInvTab;
-      inventoryLists[j].addClassName('actionable');
-      inventoryLists[j].innerHTML += '<div class="arrow">&nbsp;</div>';
+  let [itemAv, itemInv, itemUn, invAv, invInv, invUn] = [0, 0, 0, 0, 0, 0];
+  for (var app in g_rgAppContextData) {
+    if (g_rgAppContextData.hasOwnProperty(app)) {
+      if (!g_rgAppContextData[app].load_failed) {
+        if (!g_rgAppContextData[app].owner_only) { //available inventories
+          invAv++;
+          itemAv += g_rgAppContextData[app].asset_count;
+        } else { //owner only inventories
+          invInv++;
+          itemInv += g_rgAppContextData[app].asset_count;
+        }
+      } else { // unavailable inventories
+        invUn++;
+        itemUn += g_rgAppContextData[app].asset_count;
+      }
     }
   }
+  var offset = 0; // 0 when owneronly apps are hidden,  1 when visible
+  if (inventoryLists.length == 0) {
+    return;
+  }
+
+  inventoryLists.eq(0).text('Active inventories: ' + invAv).addClass('actionable').click(hideInvTab).append($J("<div>", {
+    "style": "padding-left: 500px; position: absolute;",
+    "html": "ITEMS: " + itemAv.toLocaleString('en')
+  })).append($J("<div>", {
+    "class": "arrow",
+    "html": "&nbsp;"
+  }));
+
+  if (inventoryLists.length == 3) {
+    inventoryLists.eq(1).text('Inventories visible only to you: ' + invInv).append($J("<div>", {
+      "style": "padding-left: 500px; position: absolute;",
+      "html": "ITEMS: " + itemInv.toLocaleString('en')
+    })).append($J("<div>", {
+      "class": "arrow",
+      "html": "&nbsp;"
+    }));
+    offset++;
+  }
+
+  inventoryLists.eq(1 + offset).text('Unavailable inventories: ' + invUn).append($J("<div>", {
+    "style": "padding-left: 500px; position: absolute;",
+    "html": "ITEMS: " + itemUn.toLocaleString('en')
+  })).append($J("<div>", {
+    "class": "arrow",
+    "html": "&nbsp;"
+  }));
+
+  $J('.tabitems_ctn').eq(0).prepend(
+    $J("<div>", {
+      "class": "games_list_separator responsive_hidden",
+      "text": "Total inventories: " + (invAv + invInv + invUn)
+    }).append($J("<div>", {
+      "style": "padding-left: 500px; position: absolute;",
+      "html": "ITEMS: " + (itemAv + itemInv + itemUn).toLocaleString('en')
+    }))).prepend($J("<a>", {
+    "href": "https://steamcommunity.com/sharedfiles/filedetails/?id=873140323"
+  }).append($J("<div>", {
+    "class": "games_list_separator responsive_hidden actionable",
+    "text": "View all known inventories "
+  })));
 }
 
 
@@ -337,23 +391,23 @@ function initialize() {
   }
 }
 
-function log(extra, text){
+function log(extra, text) {
   const Style = { //from simplernerd
-  base: [
-    "color: #8f98a0",
-    "background-color: #1b2838)",
-    "padding: 2px 4px",
-    "border-radius: 2px"
-  ],
-  warning: [
-    "color: #a94847"
-    //"background-color: rgba(34, 35, 48, 0.93)"
-  ],
-  good: [
-    "color: #66C0F4",
-    "background-color: #1b2838"
-  ]
-};
+    base: [
+      "color: #8f98a0",
+      "background-color: #1b2838)",
+      "padding: 2px 4px",
+      "border-radius: 2px"
+    ],
+    warning: [
+      "color: #a94847"
+      //"background-color: rgba(34, 35, 48, 0.93)"
+    ],
+    good: [
+      "color: #66C0F4",
+      "background-color: #1b2838"
+    ]
+  };
   let style = Style.base.join(';') + ';';
   style += Style[extra] ? Style[extra].join(';') : '';
   console.log(`%c${text}`, style);
