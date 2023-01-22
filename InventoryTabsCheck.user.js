@@ -2,7 +2,7 @@
 // @name         Inventory Tabs Check
 // @icon         https://store.steampowered.com/favicon.ico
 // @namespace    SteamNerds
-// @version      2.3
+// @version      2.3.1
 // @description  Highlights missing inventory tabs in Blueberry's guide and adds more stats to the inventory page
 // @author       uniQ
 // @include      /^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id\=873140323/
@@ -66,8 +66,10 @@ function runInventoryTabCheck() {
 
   function handleResponse(r1, r2, t1) {
     try {
-      if (r2.includes("g_strInventoryLoadURL") && r2.includes('id="inventory_link_753"')) {
-        var cache = JSON.parse(r2.slice(r2.indexOf('g_rgAppContextData') + 21, r2.indexOf('g_strInventoryLoadURL') - 9));
+      if (r2.includes("g_rgAppContextData") && r2.includes('id="inventory_link_753"')) {
+        var cache = r2.slice(r2.indexOf('g_rgAppContextData') + 21);
+        cache = JSON.parse(cache.slice(0, cache.indexOf(';')));
+        //read g_rgAppContextData
         var [owned, av, ab, hid, nTotal, nVisible, nBroken] = [0, 0, 0, 0, 0, 0];
         var [unknownApps, misspelledApps] = [
           [],
@@ -207,7 +209,7 @@ function runInventoryTabCheck() {
         if ($J('#tabcheck').length > 0) {
           $J('#tabcheck').remove();
         }
-        $J('#2956077').append(
+        $J('#4417594').append(
           $J("<div>", {
             "class": "subSection detailBox",
             "id": "tabcheck"
@@ -289,7 +291,7 @@ function runInventoryTabCheck() {
       }
     } catch (e) {
       log('warning', e);
-      ShowAlertDialog("Error", "An error occurred while trying to retrieve an inventory");
+      ShowAlertDialog("Error", "An error occurred while trying to retrieve your inventory");
       return false;
     }
   }
