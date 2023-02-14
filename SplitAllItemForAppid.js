@@ -17,7 +17,7 @@
   appid = appid != '' ? appid : '753';
   ShowPromptDialog("Please enter the appid", "", "Continue", "Abort", '', appid).done((a) => {
     appid = a;
-    let text = 'Here are the available context number for this app (usually only the number 2):<br><br>';
+    let text = 'Here are the options for this app (usually only the number 2):<br><br>';
     for (var contextnr in g_rgAppContextData[appid].rgContexts) {
       if (g_rgAppContextData[appid].rgContexts.hasOwnProperty(contextnr)) {
         text += contextnr + ': ' + g_rgAppContextData[appid].rgContexts[contextnr].name + ' (' + g_rgAppContextData[appid].rgContexts[contextnr].asset_count + ')<br>';
@@ -44,9 +44,11 @@
   async function splitItems() {
     ShowAlertDialog("Splitting items", '<div id="itemstacking"></div>');
 
+    var n = 0;
     for (var key in invAssets) {
       itemid = invAssets[key].assetid;
       quantity = invAssets[key].amount;
+      n++;
 
       if (quantity > 1) {
         console.log("itemid: " + itemid + " -- quantity: " + (quantity - 1));
