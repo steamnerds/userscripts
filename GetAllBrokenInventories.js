@@ -4,13 +4,14 @@
  * 
  * @name Steam Inventory broken Tabs enabler
  * @description Activate all currently known broken inventory tabs
- * @version 1.0.2
+ * @version 1.0.3
  * @author RenokK, uniQ
  * @website https://steamcommunity.com/groups/InventoryService/discussions/0/1711816348630251347/
  */
 
 const useFallbackIDs = false; //change this to true, if you want the script to only use the appIds listed below; enabling this will skip looking up the Steam group post
 const skipInventorySearch = false; //change this to true if you do not want the script to check for already owned inventories; enabling this can cause unnecessary buy requests
+const debugOnly = false; //change this to true if you want to skip buying items and see additional console output
 
 // last updated: 2023.02.14
 let appIds = [
@@ -37,7 +38,7 @@ const buy = (appId) => {
       price_total: 3,
       quantity: 1,
     }).done((data) => {
-      log('warning', data);
+      log('warning', 'Steam returned the follow message for' + appId + ': ' + data.message);
       resolve();
     });
   });
@@ -48,8 +49,12 @@ const buyAll = async () => {
     log('good', "You already own all known inventories.")
   } else {
     log('good', "Buying the following inventories: " + appIds)
-    for (let i = 0; i < appIds.length; i++) {
-      await buy(appIds[i]);
+    if (debugOnly) {
+      log('warning', 'debugOnly flag active. No items will be purchased');
+    } else {
+      for (let i = 0; i < appIds.length; i++) {
+        await buy(appIds[i]);
+      }
     }
   }
 };
@@ -70,6 +75,10 @@ const getBrokenInventories = () => { //get the current list of broken inventorie
           errormsg_list();
         } else {
           appIds = out;
+          if (debugOnly) {
+            log('good', 'Below is the list of broken inventories retrieved from the forums');
+            log('', appIds);
+          }
         }
         getInventory();
       },
@@ -93,6 +102,38 @@ const getInventory = () => { //remove already owned inventories
             if (r.includes("g_rgAppContextData") && r.includes('id="inventory_link_753"')) {
               let cache = r.slice(r.indexOf('g_rgAppContextData') + 21); //read g_rgAppContextData
               cache = JSON.parse(cache.slice(0, cache.indexOf(';')));
+              if (debugOnly) {
+                let [missing, notBroken] = [
+                  [],
+                  []
+                ];
+                log('good', 'Your inventory data has been stored in the variable "inventoryList". Note that listing large inventories and hurt performance');
+                //log('', JSON.stringify(cache, null, 2)); // output is too large for bigger inventories
+                window.inventoryList = cache;
+                for (var key in cache) {
+                  if (cache.hasOwnProperty.call(cache, key)) {
+                    if (cache[key].load_failed) {
+                      if (!appIds.includes(key)) {
+                        missing.push(cache[key].name + ' (' + key + ')'); // find apps missing from the list
+                      }
+                    } else {
+                      if (appIds.includes(key)) {
+                        notBroken.push(cache[key].name + ' (' + key + ')'); // find apps wrongly listed as broken
+                      }
+                    }
+                  }
+                }
+                missing.sort((a, b) => {
+                  return (a > b ? 1 : (a === b ? 0 : -1));
+                }) // sort alphabetically e.g. to report in the forum
+                notBroken.sort((a, b) => {
+                  return (a > b ? 1 : (a === b ? 0 : -1));
+                })
+                log('good', 'The following apps are broken but not listed in the forum');
+                log('', missing);
+                log('good', 'The following apps are listed as broken but do not appear to be');
+                log('', notBroken);
+              }
               appIds = appIds.filter(id => !cache.hasOwnProperty(id)) //filter values
               buyAll();
             } else {
