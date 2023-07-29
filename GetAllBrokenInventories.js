@@ -4,7 +4,7 @@
  * 
  * @name Steam Inventory broken Tabs enabler
  * @description Activate all currently known broken inventory tabs
- * @version 1.0.4
+ * @version 1.0.5
  * @author RenokK, uniQ
  * @website https://steamcommunity.com/groups/InventoryService/discussions/0/1711816348630251347/
  */
@@ -37,7 +37,7 @@ const buy = (appId) => {
       price_total: 3,
       quantity: 1,
     }).done((data) => {
-      log('warning', 'Steam returned the follow message for' + appId + ': ' + data.message);
+      log('warning', 'Steam returned the follow message for ' + appId + ': ' + data.message);
       resolve();
     });
   });
@@ -75,7 +75,7 @@ const getBrokenInventories = () => { //get the current list of broken inventorie
         } else {
           appIds = out;
           if (debugOnly) {
-            log('good', 'Below is the list of broken inventories retrieved from the forums');
+            log('good', 'Below is the list of broken inventories retrieved from the forums:');
             log('', appIds);
           }
         }
@@ -90,7 +90,7 @@ const getBrokenInventories = () => { //get the current list of broken inventorie
 }
 
 const getInventory = () => { //remove already owned inventories
-  const errormsg_inventory = () => log("bad", "Script aborted: Could not load your inventory. Please make sure you are logged in and set skipInventorySearch to true if necessary");
+  const errormsg_inventory = () => log("bad", "Script aborted: Could not load your inventory. Please make sure you are logged in and set skipInventorySearch to true if necessary.");
   if (!skipInventorySearch) {
     jQuery.ajax({
       type: 'GET',
@@ -106,7 +106,7 @@ const getInventory = () => { //remove already owned inventories
                   [],
                   []
                 ];
-                log('good', 'Your inventory data has been stored in the variable "inventoryList". Note that listing large inventories and hurt performance');
+                log('good', 'Your inventory data has been stored in the variable "inventoryList". Note that listing large inventories can hurt performance.');
                 //log('', JSON.stringify(cache, null, 2)); // output is too large for bigger inventories
                 window.inventoryList = cache;
                 for (var key in cache) {
@@ -128,9 +128,9 @@ const getInventory = () => { //remove already owned inventories
                 notBroken.sort((a, b) => {
                   return (a > b ? 1 : (a === b ? 0 : -1));
                 })
-                log('good', 'The following apps are broken but not listed in the forum');
+                log('good', 'The following apps are broken but not listed in the forum:');
                 log('', missing);
-                log('good', 'The following apps are listed as broken but do not appear to be');
+                log('good', 'The following apps are listed as broken but do not appear to be:');
                 log('', notBroken);
               }
               appIds = appIds.filter(id => !cache.hasOwnProperty(id)) //filter values
