@@ -1,4 +1,6 @@
 /**
+ * Run this code in your console on any https://steamcommunity.com page
+ * 
  * Original code is from RenokK https://gist.github.com/HiveSolution/54e0ad1cee00addbb42b698ff8f2fe42
  * moved here for easier maintenance
  * 
@@ -13,6 +15,8 @@ const useFallbackIDs = false; //change this to true, if you want the script to o
 const skipInventorySearch = false; //change this to true if you do not want the script to check for already owned inventories; enabling this can cause unnecessary buy requests
 const debugOnly = false; //change this to true if you want to skip buying items and see additional console output
 
+
+// fallback list in case the Steam Inventory forum is unavailable
 // last updated: 2023.02.18
 let appIds = [
   961210, 912210, 870000, 973780, 714360, 2004920, 411480, 686090, 652410, 1959960, 1112870,
@@ -154,7 +158,7 @@ const getInventory = () => { //remove already owned inventories
   } else buyAll();
 }
 
-const log = (extra, text) => {
+function log (extra, text) {
   const Style = { //from simplernerd
     base: [
       "color: #8f98a0",
